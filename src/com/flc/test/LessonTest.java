@@ -47,7 +47,7 @@ public class LessonTest {
     @Test
     public void testCannotAddSameMemberTwice() {
         assertTrue(lesson.addMember(member1));
-        assertFalse(lesson.addMember(member1)); // Should fail
+        assertFalse(lesson.addMember(member1)); //this should fail because the member is already added
         assertEquals(1, lesson.getMemberCount());
     }
 
@@ -57,7 +57,7 @@ public class LessonTest {
         assertTrue(lesson.addMember(member2));
         assertTrue(lesson.addMember(member3));
         assertTrue(lesson.addMember(member4));
-        // 5th member should fail
+        // the 5th member should fail because the lesson is full
         assertFalse(lesson.addMember(member5));
         assertEquals(4, lesson.getMemberCount());
     }
