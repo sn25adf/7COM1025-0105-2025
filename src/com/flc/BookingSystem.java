@@ -18,30 +18,32 @@ public class BookingSystem {
         do {
             System.out.println("\n===== FLC BOOKING SYSTEM =====");
             System.out.println("1. Add Member");
-            System.out.println("2. Add Lesson (Manual)");
-            System.out.println("3. Show Timetable");
-            System.out.println("4. Book Lesson");
-            System.out.println("5. Change Booking");
-            System.out.println("6. Cancel Booking");
-            System.out.println("7. Attend Lesson");
-            System.out.println("8. Write Review");
-            System.out.println("9. Lesson Report");
-            System.out.println("10. Income Report");
+            System.out.println("2. View All Members");
+            System.out.println("3. Add Lesson (Manual)");
+            System.out.println("4. Show Timetable");
+            System.out.println("5. Book Lesson");
+            System.out.println("6. Change Booking");
+            System.out.println("7. Cancel Booking");
+            System.out.println("8. Attend Lesson");
+            System.out.println("9. Write Review");
+            System.out.println("10. Lesson Report");
+            System.out.println("11. Income Report");
             System.out.println("0. Exit");
 
             choice = readInt("Choice: ");
 
             switch (choice) {
                 case 1 -> addMember();
-                case 2 -> addLesson();
-                case 3 -> showTimetableMenu();
-                case 4 -> bookLesson();
-                case 5 -> changeBooking();
-                case 6 -> cancelBooking();
-                case 7 -> attendLesson();
-                case 8 -> writeReview();
-                case 9 -> generateLessonReport();
-                case 10 -> generateIncomeReport();
+                case 2 -> viewAllMembers();
+                case 3 -> addLesson();
+                case 4 -> showTimetableMenu();
+                case 5 -> bookLesson();
+                case 6 -> changeBooking();
+                case 7 -> cancelBooking();
+                case 8 -> attendLesson();
+                case 9 -> writeReview();
+                case 10 -> generateLessonReport();
+                case 11 -> generateIncomeReport();
             }
         } while (choice != 0);
     }
@@ -68,11 +70,20 @@ public class BookingSystem {
     }
 
     private void addMember() {
-        int id = readInt("Member ID: ");
-        System.out.print("Member name: ");
-        String name = scanner.nextLine();
-        members.add(new Member(id, name));
-        System.out.println("Member added.");
+        boolean continueAdding = true;
+        while (continueAdding) {
+            int id = readInt("Member ID: ");
+            System.out.print("Member name: ");
+            String name = scanner.nextLine();
+            members.add(new Member(id, name));
+            System.out.println("Member added.");
+            
+            System.out.print("Do you want to add another member? (y/n): ");
+            String res = scanner.nextLine();
+            if (!res.trim().equalsIgnoreCase("y")) {
+                continueAdding = false;
+            }
+        }
     }
 
     private void addLesson() {
@@ -106,9 +117,16 @@ public class BookingSystem {
             list = timetable.getLessonsByExercise(scanner.nextLine());
         }
         
+        System.out.println("\n+-------+----------------+-------+-------+------------+-----------+-------+--------+");
+        System.out.printf("| %-5s | %-14s | %-5s | %-5s | %-10s | %-9s | %-5s | %-6s |\n", "Index", "Exercise", "Month", "Wknd", "Day", "Time", "Price", "Booked");
+        System.out.println("+-------+----------------+-------+-------+------------+-----------+-------+--------+");
         for (Lesson lesson : list) {
-            System.out.println(timetable.getLessons().indexOf(lesson) + " : " + lesson);
+            int index = timetable.getLessons().indexOf(lesson);
+            System.out.printf("| %-5d | %-14s | %-5d | %-5d | %-10s | %-9s | £%-4.2f | %-6d |\n",
+                    index, lesson.getExerciseName(), lesson.getMonth(), lesson.getWeekend(),
+                    lesson.getDay(), lesson.getTime(), lesson.getPrice(), lesson.getMemberCount());
         }
+        System.out.println("+-------+----------------+-------+-------+------------+-----------+-------+--------+\n");
     }
 
     private Member findMember() {
@@ -123,24 +141,31 @@ public class BookingSystem {
     private void bookLesson() {
         Member member = findMember();
         if (member == null) return;
-        showTimetableMenu();
-        int index = readInt("Lesson index to book: ");
-        if (index < 0 || index >= timetable.getLessons().size()) return;
         
-        Lesson lesson = timetable.getLessons().get(index);
-        if (lesson.getMemberCount() >= 4) {
-            System.out.println("Lesson is full.");
-            return;
-        }
-        
-        if (lesson.getBooking(member) != null) {
-            System.out.println("Member already booked this lesson.");
-            return;
-        }
-
-        if (lesson.addMember(member)) {
-            Booking booking = lesson.getBooking(member);
-            System.out.println("Booking successful! Your specific Booking ID is: " + booking.getBookingId());
+        boolean continueBooking = true;
+        while (continueBooking) {
+            showTimetableMenu();
+            int index = readInt("Lesson index to book: ");
+            if (index < 0 || index >= timetable.getLessons().size()) {
+                System.out.println("Invalid index.");
+            } else {
+                Lesson lesson = timetable.getLessons().get(index);
+                if (lesson.getMemberCount() >= 4) {
+                    System.out.println("Lesson is full.");
+                } else if (lesson.getBooking(member) != null) {
+                    System.out.println("Member already booked this lesson.");
+                } else {
+                    if (lesson.addMember(member)) {
+                        Booking booking = lesson.getBooking(member);
+                        System.out.println("Booking successful! Your specific Booking ID is: " + booking.getBookingId());
+                    }
+                }
+            }
+            System.out.print("Do you want to book another lesson for this member? (y/n): ");
+            String res = scanner.nextLine();
+            if (!res.trim().equalsIgnoreCase("y")) {
+                continueBooking = false;
+            }
         }
     }
 
@@ -280,6 +305,20 @@ public class BookingSystem {
         } else {
             System.out.println("No income generated yet for this month.");
         }
+    }
+
+    private void viewAllMembers() {
+        System.out.println("\n+------------+-----------------------------------+");
+        System.out.printf("| %-10s | %-33s |\n", "Member ID", "Member Name");
+        System.out.println("+------------+-----------------------------------+");
+        if (members.isEmpty()) {
+            System.out.printf("| %-45s |\n", "No members registered yet.");
+        } else {
+            for (Member m : members) {
+                System.out.printf("| %-10d | %-33s |\n", m.getId(), m.getName());
+            }
+        }
+        System.out.println("+------------+-----------------------------------+\n");
     }
 
     // --- HELPER METHODS FOR ROBUST INPUT ---
